@@ -60,19 +60,19 @@ public class DiscordBot extends ListenerAdapter {
                 Commands.slash("summary", "Gets a summary of this nations players")
                         .addOptions(new OptionData(STRING, "name", "Name of the nation to check.")
                                 .setRequired(true))
-                        .setGuildOnly(true).setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR))
+                        .setGuildOnly(true)
         );
 
         commands.addCommands(
                 Commands.slash("whitelist", "Whitelists a player")
                         .addOptions(new OptionData(STRING, "name", "Name of the player to whitelist.")
                                 .setRequired(true))
-                        .setGuildOnly(true).setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR))
+                        .setGuildOnly(true)
         );
 
         commands.addCommands(
                 Commands.slash("reloadconfig", "Reloads the defense systems config")
-                        .setGuildOnly(true).setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR))
+                        .setGuildOnly(true)
         );
 
         commands.queue();
