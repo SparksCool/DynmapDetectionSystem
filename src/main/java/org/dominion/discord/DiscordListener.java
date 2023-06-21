@@ -27,7 +27,7 @@ public class DiscordListener extends ListenerAdapter {
     public void onSlashCommandInteraction(SlashCommandInteractionEvent event)
     {
 
-        Role BOT_OPERATOR = activeGuild.getRoleById("1109694743610413147");
+        Role BOT_OPERATOR = activeGuild.getRoleById("1121141229409812562");
 
         if (event.getMember().getRoles().contains(BOT_OPERATOR)) {
 

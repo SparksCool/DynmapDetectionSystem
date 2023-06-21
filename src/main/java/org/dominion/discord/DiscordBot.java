@@ -54,13 +54,16 @@ public class DiscordBot extends ListenerAdapter {
 
         // These commands might take a few minutes to be active after creation/update/delete
         CommandListUpdateAction commands = jda.updateCommands();
-
         // Add our dynmap commands
+
         commands.addCommands(
                 Commands.slash("summary", "Gets a summary of this nations players")
                         .addOptions(new OptionData(STRING, "name", "Name of the nation to check.")
                                 .setRequired(true))
                         .setGuildOnly(true)
+
+                //everyone has perm
+
         );
 
         commands.addCommands(
