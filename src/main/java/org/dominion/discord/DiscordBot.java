@@ -67,8 +67,15 @@ public class DiscordBot extends ListenerAdapter {
         );
 
         commands.addCommands(
-                Commands.slash("whitelist", "Whitelists a player")
+                Commands.slash("whitelist", "Toggle whitelist of a player")
                         .addOptions(new OptionData(STRING, "name", "Name of the player to whitelist.")
+                                .setRequired(true))
+                        .setGuildOnly(true)
+        );
+
+        commands.addCommands(
+                Commands.slash("threatlist", "Toggle threat of a player")
+                        .addOptions(new OptionData(STRING, "name", "Name of the player to put on threat list.")
                                 .setRequired(true))
                         .setGuildOnly(true)
         );

@@ -91,18 +91,18 @@ public class DiscordListener extends ListenerAdapter {
                     String playerName = event.getOption("name").getAsString();
 
                     int i = 0;
-                    boolean alreadyExists = false;
+                    boolean whitelistAlreadyExists = false;
                     while (i < Config.getConfig().getJSONArray("whitelisted").length()) {
 
                         if (Config.getConfig().getJSONArray("whitelisted").getString(i).equals(playerName)) {
                             Config.getConfig().getJSONArray("whitelisted").remove(i);
-                            alreadyExists = true;
+                            whitelistAlreadyExists = true;
                         }
 
                         i++;
                     }
 
-                    if (!alreadyExists) {
+                    if (!whitelistAlreadyExists) {
                         Config.getConfig().getJSONArray("whitelisted").put(playerName);
                     }
 
@@ -114,9 +114,37 @@ public class DiscordListener extends ListenerAdapter {
 
                     Config.checkAndCreateJsonConfig();
 
-                    event.reply(alreadyExists ? "``Removed " + playerName + " to whitelist!``" : "``Added " + playerName + " from whitelist!``").queue();
+                    event.reply(whitelistAlreadyExists ? "``Removed " + playerName + " to whitelist!``" : "``Added " + playerName + " from whitelist!``").queue();
                 }
+                case "threatlist" -> {
+                    String playerName = event.getOption("name").getAsString();
 
+                    int i = 0;
+                    boolean ThreatlistAlreadyExists = false;
+                    while (i < Config.getConfig().getJSONArray("threatsList").length()) {
+
+                        if (Config.getConfig().getJSONArray("threatsList").getString(i).equals(playerName)) {
+                            Config.getConfig().getJSONArray("threatsList").remove(i);
+                            ThreatlistAlreadyExists = true;
+                        }
+
+                        i++;
+                    }
+
+                    if (!ThreatlistAlreadyExists) {
+                        Config.getConfig().getJSONArray("threatsList").put(playerName);
+                    }
+
+                    try {
+                        Files.write(Paths.get("./config.json"), Config.getConfig().toString(4).getBytes());
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+
+                    Config.checkAndCreateJsonConfig();
+
+                    event.reply(ThreatlistAlreadyExists ? "``Removed " + playerName + " to Threats List!``" : "``Added " + playerName + " from Threats List!``").queue();
+                }
             }
         } else {
             event.reply("You do not have permission for that :(").setEphemeral(true).queue();
