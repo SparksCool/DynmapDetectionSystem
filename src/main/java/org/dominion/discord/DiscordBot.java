@@ -31,10 +31,11 @@ import java.util.List;
 
 import static net.dv8tion.jda.api.interactions.commands.OptionType.STRING;
 
+
 public class DiscordBot extends ListenerAdapter {
 
     private final DynmapParser dynmapParser;
-    private final Guild activeGuild;
+    public static Guild activeGuild;
 
     private final HashMap<String, Long> memberReportTimes;
 

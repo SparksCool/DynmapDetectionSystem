@@ -1,6 +1,7 @@
 package org.dominion.discord;
 
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import org.dominion.Config;
@@ -17,7 +18,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-
+import static org.dominion.discord.DiscordBot.activeGuild;
 public class DiscordListener extends ListenerAdapter {
 
     DynmapParser dynmapParser = Main.getDynmapParser();
@@ -25,92 +26,100 @@ public class DiscordListener extends ListenerAdapter {
     @Override
     public void onSlashCommandInteraction(SlashCommandInteractionEvent event)
     {
-        // Only accept commands from guilds
-        if (event.getGuild() == null)
-            return;
-        switch (event.getName()) {
-            case "reloadconfig" -> {
-                Config.checkAndCreateJsonConfig();
-                event.reply("``Config Reloaded!``").queue();
-            }
-            case "summary" -> {
-                String nationName = event.getOption("name").getAsString();
-                JSONObject nationData;
-                try {
-                    nationData = dynmapParser.getDynmapNation(nationName);
 
-                    if (nationData == null) {
-                        event.reply("That is not a valid nation name!").queue();
-                        return;
-                    }
+        Role BOT_OPERATOR = activeGuild.getRoleById("1109694743610413147");
 
-                    List<String> onlineMembers = new ArrayList<>(dynmapParser.getAllNationPlayers(nationName));
-                    List<String> knownThreats = Config.getConfigStringList("threatsList");
-                    List<String> unknownPlayers = new ArrayList<>();
-                    List<String> membersInLands = new ArrayList<>();
-                    List<String> threatsInLands = new ArrayList<>();
+        if (event.getMember().getRoles().contains(BOT_OPERATOR)) {
 
-                    for (String player : dynmapParser.getPlayersInAllNationLands(nationName)) {
-                        if (onlineMembers.toString().contains(player)) {
-                            membersInLands.add(player);
+
+            // Only accept commands from guilds
+            if (event.getGuild() == null)
+                return;
+            switch (event.getName()) {
+                case "reloadconfig" -> {
+                    Config.checkAndCreateJsonConfig();
+                    event.reply("``Config Reloaded!``").queue();
+                }
+                case "summary" -> {
+                    String nationName = event.getOption("name").getAsString();
+                    JSONObject nationData;
+                    try {
+                        nationData = dynmapParser.getDynmapNation(nationName);
+
+                        if (nationData == null) {
+                            event.reply("That is not a valid nation name!").queue();
+                            return;
                         }
-                        else if (knownThreats.toString().contains(player)) {
-                            threatsInLands.add(player);
-                        } else {
-                            unknownPlayers.add(player);
+
+                        List<String> onlineMembers = new ArrayList<>(dynmapParser.getAllNationPlayers(nationName));
+                        List<String> knownThreats = Config.getConfigStringList("threatsList");
+                        List<String> unknownPlayers = new ArrayList<>();
+                        List<String> membersInLands = new ArrayList<>();
+                        List<String> threatsInLands = new ArrayList<>();
+
+                        for (String player : dynmapParser.getPlayersInAllNationLands(nationName)) {
+                            if (onlineMembers.toString().contains(player)) {
+                                membersInLands.add(player);
+                            } else if (knownThreats.toString().contains(player)) {
+                                threatsInLands.add(player);
+                            } else {
+                                unknownPlayers.add(player);
+                            }
                         }
+
+                        EmbedBuilder embedBuilder = new EmbedBuilder();
+                        embedBuilder.setTitle("Nation Summary");
+                        embedBuilder.setColor(Color.decode(nationData.getString("color")));
+
+                        embedBuilder.addField("Nation name:", nationData.getString("label"), false);
+                        embedBuilder.addField("Online Members:", onlineMembers.toString().replaceAll("[\\[\\]\\(\\),]", ""), false);
+                        embedBuilder.addField("Members near their lands:", membersInLands.toString().replaceAll("[\\[\\]\\(\\),]", ""), false);
+                        embedBuilder.addField("Threats near their lands:", threatsInLands.toString().replaceAll("[\\[\\]\\(\\),]", ""), false);
+                        embedBuilder.addField("Unknown Players near their lands:", unknownPlayers.toString().replaceAll("[\\[\\]\\(\\),]", ""), false);
+
+                        embedBuilder.setFooter("Official Property of the Sunset Dominion.");
+
+                        event.replyEmbeds(embedBuilder.build()).queue();
+
+                        Logger.log(ConsoleColors.BLUE + nationName + ConsoleColors.YELLOW + " has been analyzed without error!");
+
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+                case "whitelist" -> {
+                    String playerName = event.getOption("name").getAsString();
+
+                    int i = 0;
+                    boolean alreadyExists = false;
+                    while (i < Config.getConfig().getJSONArray("whitelisted").length()) {
+
+                        if (Config.getConfig().getJSONArray("whitelisted").getString(i).equals(playerName)) {
+                            Config.getConfig().getJSONArray("whitelisted").remove(i);
+                            alreadyExists = true;
+                        }
+
+                        i++;
                     }
 
-                    EmbedBuilder embedBuilder = new EmbedBuilder();
-                    embedBuilder.setTitle("Nation Summary");
-                    embedBuilder.setColor(Color.decode(nationData.getString("color")));
-
-                    embedBuilder.addField("Nation name:", nationData.getString("label"), false);
-                    embedBuilder.addField("Online Members:", onlineMembers.toString().replaceAll("[\\[\\]\\(\\),]", ""), false);
-                    embedBuilder.addField("Members near their lands:", membersInLands.toString().replaceAll("[\\[\\]\\(\\),]", ""), false);
-                    embedBuilder.addField("Threats near their lands:", threatsInLands.toString().replaceAll("[\\[\\]\\(\\),]", ""), false);
-                    embedBuilder.addField("Unknown Players near their lands:", unknownPlayers.toString().replaceAll("[\\[\\]\\(\\),]", ""), false);
-
-                    embedBuilder.setFooter("Official Property of the Sunset Dominion.");
-
-                    event.replyEmbeds(embedBuilder.build()).queue();
-
-                    Logger.log(ConsoleColors.BLUE + nationName + ConsoleColors.YELLOW + " has been analyzed without error!");
-
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-            case "whitelist" -> {
-                String playerName = event.getOption("name").getAsString();
-
-                int i = 0;
-                boolean alreadyExists = false;
-                while (i < Config.getConfig().getJSONArray("whitelisted").length()) {
-
-                    if (Config.getConfig().getJSONArray("whitelisted").getString(i).equals(playerName)) {
-                        Config.getConfig().getJSONArray("whitelisted").remove(i);
-                        alreadyExists = true;
+                    if (!alreadyExists) {
+                        Config.getConfig().getJSONArray("whitelisted").put(playerName);
                     }
 
-                    i++;
+                    try {
+                        Files.write(Paths.get("./config.json"), Config.getConfig().toString(4).getBytes());
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+
+                    Config.checkAndCreateJsonConfig();
+
+                    event.reply(alreadyExists ? "``Removed " + playerName + " to whitelist!``" : "``Added " + playerName + " from whitelist!``").queue();
                 }
 
-                if (!alreadyExists) {
-                    Config.getConfig().getJSONArray("whitelisted").put(playerName);
-                }
-
-                try {
-                    Files.write(Paths.get("./config.json"), Config.getConfig().toString(4).getBytes());
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-
-                Config.checkAndCreateJsonConfig();
-
-                event.reply(alreadyExists ? "``Removed " + playerName +" to whitelist!``" : "``Added " + playerName +" from whitelist!``" ).queue();
             }
-
+        } else {
+            event.reply("You do not have permission for that :(").setEphemeral(true).queue();
         }
     }
 }
