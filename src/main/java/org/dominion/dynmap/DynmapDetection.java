@@ -19,7 +19,6 @@ public class DynmapDetection extends TimerTask {
     }
 
     public void doRun() {
-        Main.checkAndCreateJsonConfig("./config.json", "{}");
         Main.getDiscordBot().sendDetectionUpdate();
     }
 }

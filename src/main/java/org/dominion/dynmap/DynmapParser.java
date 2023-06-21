@@ -85,6 +85,7 @@ public class DynmapParser {
         return matchingNations;
     }
 
+    // gets a nation by name
     public JSONObject getDynmapNation(String nationName) throws IOException {
         JSONArray nationsList = getDynmapNations();
 

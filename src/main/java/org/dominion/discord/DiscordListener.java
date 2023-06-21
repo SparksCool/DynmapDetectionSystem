@@ -3,6 +3,7 @@ package org.dominion.discord;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import org.dominion.Config;
 import org.dominion.Main;
 import org.dominion.dynmap.DynmapParser;
 import org.dominion.logging.ConsoleColors;
@@ -29,7 +30,7 @@ public class DiscordListener extends ListenerAdapter {
             return;
         switch (event.getName()) {
             case "reloadconfig" -> {
-                Main.checkAndCreateJsonConfig("./config.json", "{}");
+                Config.checkAndCreateJsonConfig();
                 event.reply("``Config Reloaded!``").queue();
             }
             case "summary" -> {
@@ -44,7 +45,7 @@ public class DiscordListener extends ListenerAdapter {
                     }
 
                     List<String> onlineMembers = new ArrayList<>(dynmapParser.getAllNationPlayers(nationName));
-                    List<String> knownThreats = Main.getConfigStringList("threatsList");
+                    List<String> knownThreats = Config.getConfigStringList("threatsList");
                     List<String> unknownPlayers = new ArrayList<>();
                     List<String> membersInLands = new ArrayList<>();
                     List<String> threatsInLands = new ArrayList<>();
@@ -85,10 +86,10 @@ public class DiscordListener extends ListenerAdapter {
 
                 int i = 0;
                 boolean alreadyExists = false;
-                while (i < Main.getConfig().getJSONArray("whitelisted").length()) {
+                while (i < Config.getConfig().getJSONArray("whitelisted").length()) {
 
-                    if (Main.getConfig().getJSONArray("whitelisted").getString(i).equals(playerName)) {
-                        Main.getConfig().getJSONArray("whitelisted").remove(i);
+                    if (Config.getConfig().getJSONArray("whitelisted").getString(i).equals(playerName)) {
+                        Config.getConfig().getJSONArray("whitelisted").remove(i);
                         alreadyExists = true;
                     }
 
@@ -96,16 +97,16 @@ public class DiscordListener extends ListenerAdapter {
                 }
 
                 if (!alreadyExists) {
-                    Main.getConfig().getJSONArray("whitelisted").put(playerName);
+                    Config.getConfig().getJSONArray("whitelisted").put(playerName);
                 }
 
                 try {
-                    Files.write(Paths.get("./config.json"), Main.getConfig().toString(4).getBytes());
+                    Files.write(Paths.get("./config.json"), Config.getConfig().toString(4).getBytes());
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
 
-                Main.checkAndCreateJsonConfig("./config.json", "{}");
+                Config.checkAndCreateJsonConfig();
 
                 event.reply(alreadyExists ? "``Removed " + playerName +" to whitelist!``" : "``Added " + playerName +" from whitelist!``" ).queue();
             }

@@ -25,7 +25,6 @@ public class Main {
     private static DynmapParser dynmapParser;
     private static Main activeInstance;
     private static DiscordBot discordBot;
-    private static JSONObject config;
 
 
 
@@ -36,7 +35,7 @@ public class Main {
 
         discordBot = new DiscordBot();
 
-        checkAndCreateJsonConfig("./config.json", "{}");
+        Config.checkAndCreateJsonConfig();
 
         Timer timer = new Timer();
         timer.schedule(new DynmapDetection(), 0, 30000);
@@ -50,70 +49,4 @@ public class Main {
         return discordBot;
     }
 
-    public static JSONObject getConfig() {
-        return config;
-    }
-
-    public static String getConfigStringWithDefault(String key, String defaultValue) {
-        if (config.has(key)) {
-            return config.getString(key);
-        } else {
-            return defaultValue;
-        }
-    }
-
-    public static Object getConfigObjectWithDefault(String key, Object defaultValue) {
-        if (config.has(key)) {
-            return config.get(key);
-        } else {
-            return defaultValue;
-        }
-    }
-
-    public static JSONArray getConfigJSONArrayWithDefault(String key, JSONArray defaultValue) {
-        if (config.has(key)) {
-            return config.getJSONArray(key);
-        } else {
-            return defaultValue;
-        }
-    }
-
-    public static List<String> getConfigStringList(String key) {
-        List<String> configList = new ArrayList<>();
-        for(Object entry : Main.getConfigJSONArrayWithDefault(key, new JSONArray())) {
-            configList.add(entry.toString());
-        }
-        return configList;
-    }
-
-    public static void checkAndCreateJsonConfig(String filePath, String defaultContent) {
-        Path path = Paths.get(filePath);
-
-        if (!Files.exists(path)) {
-            try {
-                Files.write(path, defaultContent.getBytes());
-                System.out.println("JSON config file created at " + filePath);
-                config = new JSONObject(readJsonConfig(path));
-            } catch (IOException e) {
-                Logger.log(ConsoleColors.RED + "Error while creating JSON config file: " + e.getMessage());
-            }
-        } else {
-            Logger.log(ConsoleColors.YELLOW + "JSON config file already exists at " + filePath);
-            config = new JSONObject(readJsonConfig(path));
-
-
-        }
-    }
-
-    public static String readJsonConfig(Path path) {
-        String content = "";
-
-        try {
-            content = Files.readString(path);
-        } catch (IOException e) {
-            System.err.println("Error while reading JSON config file: " + e.getMessage());
-        }
-
-        return content;
-    }
 }

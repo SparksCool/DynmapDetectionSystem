@@ -15,6 +15,7 @@ import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.requests.restaction.CommandListUpdateAction;
+import org.dominion.Config;
 import org.dominion.Main;
 import org.dominion.dynmap.DynmapParser;
 import org.dominion.logging.ConsoleColors;
@@ -43,14 +44,12 @@ public class DiscordBot extends ListenerAdapter {
 
         memberReportTimes = new HashMap<>();
 
-        Main.checkAndCreateJsonConfig("./config.json", "{}");
-
         // slash commands don't need any intents
-        JDA jda = JDABuilder.createLight("MTEyMDA1NDk2ODY2MjExODU4MQ.GsgndZ.4N-nwbYRj6qOIqk8VSjzxHYgg3LO6Vr7p3Hcrs", EnumSet.noneOf(GatewayIntent.class)) // slash commands don't need any intents
+        JDA jda = JDABuilder.createLight(Config.getConfigStringWithDefault("token", ""), EnumSet.noneOf(GatewayIntent.class)) // slash commands don't need any intents
                 .addEventListeners(new DiscordListener())
                 .build().awaitReady();
 
-        activeGuild = jda.getGuildById(Main.getConfigStringWithDefault("guildID", "1084575613744066764"));
+        activeGuild = jda.getGuildById(Config.getConfigStringWithDefault("guildID", "1084575613744066764"));
 
         // These commands might take a few minutes to be active after creation/update/delete
         CommandListUpdateAction commands = jda.updateCommands();
@@ -80,12 +79,12 @@ public class DiscordBot extends ListenerAdapter {
     }
 
     public void sendDetectionUpdate() {
-        TextChannel channel = activeGuild.getTextChannelById(Main.getConfigStringWithDefault("detectionChannel", "1084576582913499216"));
+        TextChannel channel = activeGuild.getTextChannelById(Config.getConfigStringWithDefault("detectionChannel", "1084576582913499216"));
 
         JSONObject nationData;
         java.util.List<String> onlineMembers = new ArrayList<>();
 
-        for (String nationName : Main.getConfigStringList("nationsList")) {
+        for (String nationName : Config.getConfigStringList("nationsList")) {
             try {
                 onlineMembers.addAll(dynmapParser.getAllNationPlayers(nationName));
             } catch (IOException e) {
@@ -94,7 +93,7 @@ public class DiscordBot extends ListenerAdapter {
         }
 
 
-        for (String nationName : Main.getConfigStringList("nationsList")) {
+        for (String nationName : Config.getConfigStringList("nationsList")) {
             try {
                 nationData = dynmapParser.getDynmapNation(nationName);
 
@@ -102,13 +101,13 @@ public class DiscordBot extends ListenerAdapter {
                     throw new RuntimeException(nationName + " has returned null!");
                 }
 
-                java.util.List<String> knownThreats = Main.getConfigStringList("threatsList");
+                java.util.List<String> knownThreats = Config.getConfigStringList("threatsList");
                 java.util.List<String> unknownPlayers = new ArrayList<>();
                 java.util.List<String> membersInLands = new ArrayList<>();
                 List<String> threatsInLands = new ArrayList<>();
 
                 for (String player : dynmapParser.getPlayersInAllNationLands(nationName)) {
-                    if (onlineMembers.toString().contains(player) || Main.getConfigStringList("whitelisted").contains(player)) {
+                    if (onlineMembers.toString().contains(player) || Config.getConfigStringList("whitelisted").contains(player)) {
                         membersInLands.add(player);
                     }
                     else if (memberReportTimes == null || (memberReportTimes.get(player) != null && (((System.currentTimeMillis() - memberReportTimes.get(player)) / 1000 / 60 != 15)))) {
