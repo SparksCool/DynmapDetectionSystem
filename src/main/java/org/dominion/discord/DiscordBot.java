@@ -128,8 +128,11 @@ public class DiscordBot extends ListenerAdapter {
 
                 EmbedBuilder embedBuilder = new EmbedBuilder();
                 embedBuilder.setTitle("National Defense Alert");
-                embedBuilder.setColor(new Color(0xE86713));
-
+                if (threatsInLands.size() > 0) {
+                    embedBuilder.setColor(Color.RED);
+                } else {
+                    embedBuilder.setColor(new Color(0xE86713));
+                }
                 embedBuilder.addField("Province name", nationData.getString("label"), false);
                 embedBuilder.addField("Online Dominion Members:", onlineMembers.toString().replaceAll("[\\[\\]\\(\\),]", ""), false);
                 embedBuilder.addField("Members near lands:", membersInLands.toString().replaceAll("[\\[\\]\\(\\),]", ""), false);
