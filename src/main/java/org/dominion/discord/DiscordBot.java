@@ -20,6 +20,7 @@ import org.dominion.Main;
 import org.dominion.dynmap.DynmapParser;
 import org.dominion.logging.ConsoleColors;
 import org.dominion.logging.Logger;
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.awt.*;
@@ -36,8 +37,8 @@ public class DiscordBot extends ListenerAdapter {
 
     private final DynmapParser dynmapParser;
     public static Guild activeGuild;
-
     private final HashMap<String, Long> memberReportTimes;
+    private JSONArray playerList;
 
     public DiscordBot() throws InterruptedException {
 
@@ -155,6 +156,72 @@ public class DiscordBot extends ListenerAdapter {
                 }
 
                 Logger.log(ConsoleColors.BLUE + nationName + ConsoleColors.YELLOW + " has been analyzed without error!");
+
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
+    public void checkLogOut(JSONObject playerDetected) {
+        TextChannel channel = activeGuild.getTextChannelById(Config.getConfigStringWithDefault("detectionChannel", "1084576582913499216"));
+
+        JSONObject nationData;
+        java.util.List<String> onlineMembers = new ArrayList<>();
+
+        for (String nationName : Config.getConfigStringList("nationsList")) {
+            try {
+                onlineMembers.addAll(dynmapParser.getAllNationPlayers(nationName));
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+
+        for (String nationName : Config.getConfigStringList("nationsList")) {
+            try {
+                nationData = dynmapParser.getDynmapNation(nationName);
+
+                if (nationData == null) {
+                    throw new RuntimeException(nationName + " has returned null!");
+                }
+
+                java.util.List<String> knownThreats = Config.getConfigStringList("threatsList");
+                java.util.List<String> unknownPlayers = new ArrayList<>();
+                java.util.List<String> membersInLands = new ArrayList<>();
+                List<String> threatsInLands = new ArrayList<>();
+
+                for (String player : dynmapParser.getPlayersInAllNationLands(nationName)) {
+                    if (onlineMembers.toString().contains(player) || Config.getConfigStringList("whitelisted").contains(player)) {
+                        membersInLands.add(player);
+                    }
+                    else if (knownThreats.toString().contains(player)) {
+                        threatsInLands.add(player);
+                    } else {
+                        unknownPlayers.add(player);
+                    }
+                }
+
+                EmbedBuilder embedBuilder = new EmbedBuilder();
+                embedBuilder.setTitle("Threatening Log Off Detected!");
+                if (threatsInLands.size() > 0) {
+                    embedBuilder.setColor(Color.RED);
+                } else {
+                    embedBuilder.setColor(new Color(0xE86713));
+                }
+                embedBuilder.addField("Province name", nationData.getString("label"), false);
+                embedBuilder.addField("Online Dominion Members:", onlineMembers.toString().replaceAll("[\\[\\]\\(\\),]", ""), false);
+                embedBuilder.addField("Suspect player:", playerDetected.getString("name").replaceAll("[\\[\\]\\(\\),]", ""), false);
+
+                embedBuilder.setFooter("Official Property of the Sunset Dominion.");
+
+                if (threatsInLands.toString().contains(playerDetected.getString("name")) || unknownPlayers.toString().contains(playerDetected.getString("name"))) {
+                    channel.sendMessageEmbeds(embedBuilder.build()).queue();
+                    channel.sendMessage("<@&1116977788541476904>").queue();
+
+                }
+
+                Logger.log(ConsoleColors.BLUE + nationName + ConsoleColors.YELLOW + " has been checked for bad log offs!");
 
             } catch (IOException e) {
                 throw new RuntimeException(e);
