@@ -26,7 +26,79 @@ public class DiscordListener extends ListenerAdapter {
     @Override
     public void onSlashCommandInteraction(SlashCommandInteractionEvent event)
     {
+        //Public commands
+        switch (event.getName()) {
+            case "link-account" -> {
+                String MCAccount1 = event.getOption("mc-username").getAsString();
+                String MCAccount2 = "";
+                if (event.getOption("mc-username-2") != null) {
+                    MCAccount2 = event.getOption("mc-username-2").getAsString();
+                }
+                String userID = event.getUser().getId();
+                String userPrevNick = event.getMember().getNickname();
+                int i = 0;
+                boolean LinkedAccountAlreadyExists = false;
+                while (i < Config.getConfig().getJSONArray("LinkedAccounts").length()) {
+                    String[] splitAccount = Config.getConfig().getJSONArray("LinkedAccounts").getString(i).split(":");
+                    if (splitAccount[0].equals(userID)) {
+                        Config.getConfig().getJSONArray("LinkedAccounts").remove(i);
+                        LinkedAccountAlreadyExists = true;
+                    }
 
+                    i++;
+                }
+
+                if (event.getOption("mc-username-2") == null){
+                    Config.getConfig().getJSONArray("LinkedAccounts").put(userID+":"+MCAccount1);
+                    event.getMember().modifyNickname(userPrevNick+" | "+ MCAccount1).queue();
+                }else {
+                    Config.getConfig().getJSONArray("LinkedAccounts").put(userID+":"+MCAccount1+":"+MCAccount2);
+                    event.getMember().modifyNickname(userPrevNick+" | "+ MCAccount1+" | "+MCAccount2).queue();
+                }
+                try {
+                    Files.write(Paths.get("./config.json"), Config.getConfig().toString(4).getBytes());
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+
+                Config.checkAndCreateJsonConfig();
+                if (LinkedAccountAlreadyExists == false){
+                    event.reply("``Linked Account!``").queue();
+
+                } else {
+                    event.reply("``Replaced Linked Account with new version``").queue();
+                }
+            }
+
+            case "unlink-account" -> {
+                int i = 0;
+                int linkedAccounts = Config.getConfig().getJSONArray("LinkedAccounts").length();
+                while (i < linkedAccounts) {
+                    String[] splitAccount = Config.getConfig().getJSONArray("LinkedAccounts").getString(i).split(":");
+                    if (splitAccount[0].equals(event.getUser().getId())) {
+                        Config.getConfig().getJSONArray("LinkedAccounts").remove(i);
+                    }
+                    i++;
+
+                    //on last one if still not then make a boolean true
+                    if (i == linkedAccounts && !splitAccount[0].equals(event.getUser().getId())) {
+                        event.reply("``You do not have a linked account!``").queue();
+                        return;
+                    }
+                }
+                String newNick = event.getMember().getNickname().split(" | ")[0];
+                event.getMember().modifyNickname(newNick).queue();
+                try {
+                    Files.write(Paths.get("./config.json"), Config.getConfig().toString(4).getBytes());
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+                event.reply("``Unlinked Account!``").queue();
+            }
+
+        }
+
+        // Bot Operator Commands
         Role BOT_OPERATOR = activeGuild.getRoleById("1121141229409812562");
 
         if (event.getMember().getRoles().contains(BOT_OPERATOR)) {
@@ -114,7 +186,7 @@ public class DiscordListener extends ListenerAdapter {
 
                     Config.checkAndCreateJsonConfig();
 
-                    event.reply(whitelistAlreadyExists ? "``Removed " + playerName + " to whitelist!``" : "``Added " + playerName + " from whitelist!``").queue();
+                    event.reply(whitelistAlreadyExists ? "``Removed " + playerName + " from whitelist!``" : "``Added " + playerName + " to whitelist!``").queue();
                 }
                 case "threatlist" -> {
                     String playerName = event.getOption("name").getAsString();
@@ -145,6 +217,8 @@ public class DiscordListener extends ListenerAdapter {
 
                     event.reply(ThreatlistAlreadyExists ? "``Removed " + playerName + " to Threats List!``" : "``Added " + playerName + " from Threats List!``").queue();
                 }
+
+
             }
         } else {
             event.reply("You do not have permission for that :(").setEphemeral(true).queue();

@@ -1,4 +1,5 @@
 {
+    "LinkedAccounts": ["405894247745716224:SparksCool"],
     "threatsList": ["_Offside"],
     "whitelisted": [
         "AtWar",
@@ -20,7 +21,8 @@
         "thenoqb",
         "garunga59",
         "ChilCookieCat",
-        "CyberDogiy"
+        "CyberDogiy",
+        "RCGV_"
     ],
     "nationsList": [
         "Sunset Dominion",

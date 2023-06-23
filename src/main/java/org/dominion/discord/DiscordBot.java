@@ -75,8 +75,20 @@ public class DiscordBot extends ListenerAdapter {
 
         commands.addCommands(
                 Commands.slash("threatlist", "Toggle threat of a player")
-                        .addOptions(new OptionData(STRING, "name", "Name of the player to put on threat list.")
-                                .setRequired(true))
+                        .addOptions(new OptionData(STRING, "name", "Name of the player to put on threat list.",true))
+
+                        .setGuildOnly(true)
+        );
+
+
+        commands.addCommands(
+                Commands.slash("unlink-account", "Remove the link to your ign and reverts the nick")
+                        .setGuildOnly(true)
+        );
+        commands.addCommands(
+                Commands.slash("link-account", "Links discord to your ign")
+                        .addOption(STRING,"mc-username","Your Minecraft username (Case sensitive)",true)
+                        .addOption(STRING,"mc-username-2","Your Minecraft username Alt account (Case sensitive)",false)
                         .setGuildOnly(true)
         );
 
