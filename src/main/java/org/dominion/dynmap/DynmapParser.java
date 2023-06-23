@@ -1,15 +1,13 @@
 package org.dominion.dynmap;
 
+import org.dominion.Main;
 import org.dominion.logging.ConsoleColors;
 import org.dominion.logging.Logger;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.geom.Path2D;
-import java.awt.image.BufferedImage;
-import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -19,6 +17,7 @@ import java.util.*;
 public class DynmapParser {
 
     private URL url;
+    private List<String> players = new ArrayList<>();
 
     public DynmapParser(String url) throws MalformedURLException {
         this.url = new URL(url);
@@ -47,6 +46,23 @@ public class DynmapParser {
 
         for (Object player : result.getJSONArray("players")) {
             playerList.put(player);
+        }
+
+        return playerList;
+    }
+
+    public List<JSONObject> getDynmapPlayerObjects() throws IOException {
+        Scanner sc = new Scanner(url.openStream());
+        StringBuffer sb = new StringBuffer();
+        while (sc.hasNext()) {
+            sb.append(" " + sc.next());
+        }
+        JSONObject result = new JSONObject(sb.toString());
+
+        List<JSONObject> playerList = new ArrayList<>();
+
+        for (Object player : result.getJSONArray("players")) {
+            playerList.add(new JSONObject(player.toString()));
         }
 
         return playerList;
@@ -209,6 +225,42 @@ public class DynmapParser {
         }
 
         return playerList.stream().toList();
+    }
+
+    public List<String> getPlayerNames() throws IOException {
+        List<JSONObject> players = getDynmapPlayerObjects();
+        List<String> playerNames = new ArrayList<>();
+
+        for (JSONObject player : players) {
+            playerNames.add(player.getString("name"));
+        }
+
+        return playerNames;
+    }
+
+    public JSONObject getPlayerByName(String playerName) throws IOException {
+        List<JSONObject> players = getDynmapPlayerObjects();
+        JSONObject player = new JSONObject();
+
+        for (JSONObject currentPlayer : players) {
+            if (player.has("name") && player.getString("name").equals(playerName)) {
+                player = currentPlayer;
+            }
+        }
+
+        return player;
+    }
+
+    public void checkLogOffs() throws IOException {
+        List<String> newPlayers = getPlayerNames();
+
+        for (String player : players) {
+            if (!newPlayers.contains(player)) {
+                Main.getDiscordBot().checkLogOut(getPlayerByName(player));
+            }
+        }
+
+        players = newPlayers;
     }
 
 }
