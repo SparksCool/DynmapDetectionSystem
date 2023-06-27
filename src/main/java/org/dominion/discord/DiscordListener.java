@@ -188,6 +188,35 @@ public class DiscordListener extends ListenerAdapter {
 
                     event.reply(whitelistAlreadyExists ? "``Removed " + playerName + " from whitelist!``" : "``Added " + playerName + " to whitelist!``").queue();
                 }
+                case "whitelist-ally" -> {
+                    String playerName = event.getOption("name").getAsString();
+
+                    int i = 0;
+                    boolean whitelistAlreadyExists = false;
+                    while (i < Config.getConfig().getJSONArray("alliedWhiteList").length()) {
+
+                        if (Config.getConfig().getJSONArray("alliedWhiteList").getString(i).equals(playerName)) {
+                            Config.getConfig().getJSONArray("alliedWhiteList").remove(i);
+                            whitelistAlreadyExists = true;
+                        }
+
+                        i++;
+                    }
+
+                    if (!whitelistAlreadyExists) {
+                        Config.getConfig().getJSONArray("alliedWhiteList").put(playerName);
+                    }
+
+                    try {
+                        Files.write(Paths.get("./config.json"), Config.getConfig().toString(4).getBytes());
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+
+                    Config.checkAndCreateJsonConfig();
+
+                    event.reply(whitelistAlreadyExists ? "``Removed " + playerName + " from allied whitelist!``" : "``Added " + playerName + " to allied whitelist!``").queue();
+                }
                 case "threatlist" -> {
                     String playerName = event.getOption("name").getAsString();
 
