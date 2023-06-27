@@ -107,6 +107,8 @@ public class DiscordBot extends ListenerAdapter {
 
         JSONObject nationData;
         java.util.List<String> onlineMembers = new ArrayList<>();
+        java.util.List<String> onlineAlliedMembers = new ArrayList<>();
+
 
         for (String nationName : Config.getConfigStringList("nationsList")) {
             try {
@@ -116,6 +118,13 @@ public class DiscordBot extends ListenerAdapter {
             }
         }
 
+        for (String nationName : Config.getConfigStringList("alliesList")) {
+            try {
+                onlineAlliedMembers.addAll(dynmapParser.getAllNationPlayers(nationName));
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
 
         for (String nationName : Config.getConfigStringList("nationsList")) {
             try {
@@ -128,6 +137,8 @@ public class DiscordBot extends ListenerAdapter {
                 java.util.List<String> knownThreats = Config.getConfigStringList("threatsList");
                 java.util.List<String> unknownPlayers = new ArrayList<>();
                 java.util.List<String> membersInLands = new ArrayList<>();
+                java.util.List<String> alliesInLands = new ArrayList<>();
+
                 List<String> threatsInLands = new ArrayList<>();
 
                 for (String player : dynmapParser.getPlayersInAllNationLands(nationName)) {
@@ -140,7 +151,11 @@ public class DiscordBot extends ListenerAdapter {
                     else if (knownThreats.toString().contains(player)) {
                         threatsInLands.add(player);
                         memberReportTimes.put(player, System.currentTimeMillis());
-                    } else {
+                    }
+                    else if (onlineAlliedMembers.toString().contains(player)  || Config.getConfigStringList("alliedWhiteList").contains(player)){
+                        alliesInLands.add(player);
+                    }
+                    else {
                         unknownPlayers.add(player);
                         memberReportTimes.put(player, System.currentTimeMillis());
                     }
@@ -156,7 +171,68 @@ public class DiscordBot extends ListenerAdapter {
                 embedBuilder.addField("Province name", nationData.getString("label"), false);
                 embedBuilder.addField("Online Dominion Members:", onlineMembers.toString().replaceAll("[\\[\\]\\(\\),]", ""), false);
                 embedBuilder.addField("Members near lands:", membersInLands.toString().replaceAll("[\\[\\]\\(\\),]", ""), false);
+                embedBuilder.addField("Allies near lands:", alliesInLands.toString().replaceAll("[\\[\\]\\(\\),]", ""), false);
                 embedBuilder.addField("Threats near our lands:", threatsInLands.toString().replaceAll("[\\[\\]\\(\\),]", ""), false);
+                embedBuilder.addField("Unknown Players near lands:", unknownPlayers.toString().replaceAll("[\\[\\]\\(\\),]", ""), false);
+
+                embedBuilder.setFooter("Official Property of the Sunset Dominion.");
+
+                if (threatsInLands.size() > 0 || unknownPlayers.size() > 0) {
+                    channel.sendMessageEmbeds(embedBuilder.build()).queue();
+                    if (threatsInLands.size() > 0) {
+                        channel.sendMessage(":bangbang: <@&1084884328598741032> :bangbang:").queue(); // Millitary Role
+                    } else {
+                        channel.sendMessage("<@&1116977788541476904>").queue(); // Detection Ping Role
+                    }
+
+                }
+
+                Logger.log(ConsoleColors.BLUE + nationName + ConsoleColors.YELLOW + " has been analyzed without error!");
+
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        for (String nationName : Config.getConfigStringList("alliesList")){
+            try {
+                nationData = dynmapParser.getDynmapNation(nationName);
+
+                if (nationData == null) {
+                    throw new RuntimeException(nationName + " has returned null!");
+                }
+
+                java.util.List<String> knownThreats = Config.getConfigStringList("threatsList");
+                java.util.List<String> unknownPlayers = new ArrayList<>();
+                java.util.List<String> membersInLands = new ArrayList<>();
+                List<String> threatsInLands = new ArrayList<>();
+
+
+                for (String player : dynmapParser.getPlayersInAllNationLands(nationName)) {
+                    if (onlineMembers.toString().contains(player) || Config.getConfigStringList("whitelisted").contains(player) || Config.getConfigStringList("alliesList").contains(player) || Config.getConfigStringList("alliedWhiteList").contains(player)) {
+                        membersInLands.add(player);
+                    }
+                    else if (memberReportTimes == null || (memberReportTimes.get(player) != null && (((System.currentTimeMillis() - memberReportTimes.get(player)) / 1000 / 60 != 15)))) {
+                        Logger.log(ConsoleColors.GREEN + player + ConsoleColors.BLUE + " must wait " + (15 - ((System.currentTimeMillis() - memberReportTimes.get(player)) / 1000 / 60) + " more minutes to be logged again!" ));
+                    }
+                    else if (knownThreats.toString().contains(player)) {
+                        threatsInLands.add(player);
+                        memberReportTimes.put(player, System.currentTimeMillis());
+                    } else {
+                        unknownPlayers.add(player);
+                        memberReportTimes.put(player, System.currentTimeMillis());
+                    }
+                }
+
+                EmbedBuilder embedBuilder = new EmbedBuilder();
+                embedBuilder.setTitle("Defense Alert for " + nationData.getString("label"));
+                if (threatsInLands.size() > 0) {
+                    embedBuilder.setColor(Color.RED);
+                } else {
+                    embedBuilder.setColor(new Color(0xE86713));
+                }
+                embedBuilder.addField("Online Allied Members:", onlineMembers.toString().replaceAll("[\\[\\]\\(\\),]", ""), false);
+                embedBuilder.addField("Members near lands:", membersInLands.toString().replaceAll("[\\[\\]\\(\\),]", ""), false);
+                embedBuilder.addField("Threats near lands:", threatsInLands.toString().replaceAll("[\\[\\]\\(\\),]", ""), false);
                 embedBuilder.addField("Unknown Players near lands:", unknownPlayers.toString().replaceAll("[\\[\\]\\(\\),]", ""), false);
 
                 embedBuilder.setFooter("Official Property of the Sunset Dominion.");
@@ -179,11 +255,19 @@ public class DiscordBot extends ListenerAdapter {
         TextChannel channel = activeGuild.getTextChannelById(Config.getConfigStringWithDefault("detectionChannel", "1084576582913499216"));
 
         JSONObject nationData;
-        java.util.List<String> onlineMembers = new ArrayList<>();
+        java.util.List<String> onlineDominionMembers = new ArrayList<>();
+        java.util.List<String> onlineAlliedMembers = new ArrayList<>();
 
         for (String nationName : Config.getConfigStringList("nationsList")) {
             try {
-                onlineMembers.addAll(dynmapParser.getAllNationPlayers(nationName));
+                onlineDominionMembers.addAll(dynmapParser.getAllNationPlayers(nationName));
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        for (String nationName : Config.getConfigStringList("alliesList")) {
+            try {
+                onlineAlliedMembers.addAll(dynmapParser.getAllNationPlayers(nationName));
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -204,7 +288,7 @@ public class DiscordBot extends ListenerAdapter {
                 List<String> threatsInLands = new ArrayList<>();
 
                 for (String player : dynmapParser.getPlayersInAllNationLands(nationName)) {
-                    if (onlineMembers.toString().contains(player) || Config.getConfigStringList("whitelisted").contains(player)) {
+                    if (onlineDominionMembers.toString().contains(player) || Config.getConfigStringList("whitelisted").contains(player)) {
                         membersInLands.add(player);
                     }
                     else if (knownThreats.toString().contains(player)) {
@@ -222,7 +306,7 @@ public class DiscordBot extends ListenerAdapter {
                     embedBuilder.setColor(new Color(0xE86713));
                 }
                 embedBuilder.addField("Province name", nationData.getString("label"), false);
-                embedBuilder.addField("Online Dominion Members:", onlineMembers.toString().replaceAll("[\\[\\]\\(\\),]", ""), false);
+                embedBuilder.addField("Online Dominion Members:", onlineDominionMembers.toString().replaceAll("[\\[\\]\\(\\),]", ""), false);
                 embedBuilder.addField("Suspect player:", playerDetected.getString("name").replaceAll("[\\[\\]\\(\\),]", ""), false);
 
                 embedBuilder.setFooter("Official Property of the Sunset Dominion.");
