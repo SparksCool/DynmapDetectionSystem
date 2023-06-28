@@ -134,7 +134,7 @@ public class DiscordBot extends ListenerAdapter {
         }
         for (String nationName : Config.getConfigStringList("threatNations")) {
             try {
-                onlineAlliedMembers.addAll(dynmapParser.getAllNationPlayers(nationName));
+                onlineThreatMembers.addAll(dynmapParser.getAllNationPlayers(nationName));
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }

@@ -1,6 +1,25 @@
 {
-    "LinkedAccounts": ["405894247745716224:SparksCool"],
-    "threatsList": ["_Offside"],
+    "LinkedAccounts": [
+        "405894247745716224:SparksCool",
+        "556326115837345826:RCGV_:.RCGV9885"
+    ],
+    "alliedWhiteList": [
+        "Kris_Aquino",
+        "Lowege",
+        "DarkBloodMC",
+        "FallenAngel0022",
+        "Z1Gamer"
+    ],
+    "alliesList": [
+        "Valydaera",
+        "Deseret",
+        "Gichigami",
+        "Golden Circle of Aurelius"
+    ],
+    "threatsList": [
+        "_Offside",
+        ".Maraco5612"
+    ],
     "whitelisted": [
         "AtWar",
         "crusaderoftime",
@@ -22,13 +41,21 @@
         "garunga59",
         "ChilCookieCat",
         "CyberDogiy",
-        "RCGV_"
+        "RCGV_",
+        "loki_the_bush",
+        "_ASHN_",
+        "SenatorSam",
+        "ChordHarmony"
     ],
     "nationsList": [
         "Sunset Dominion",
         "Hobo-SD",
         "United States of America"
     ],
+    "threatNations":[
+        "Potagan Diarchy"
+    ],
+
     "guildID": "1084575613744066764",
     "detectionChannel": "1115897440097288222",
     "token": "MTEyMDA1NDk2ODY2MjExODU4MQ.GsgndZ.4N-nwbYRj6qOIqk8VSjzxHYgg3LO6Vr7p3Hcrs"
