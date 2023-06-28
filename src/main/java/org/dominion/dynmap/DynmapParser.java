@@ -51,6 +51,20 @@ public class DynmapParser {
         return playerList;
     }
 
+    public float[] getPlayerCoordinates(String name) throws IOException {
+        float[] coordinatePoints = new float[3];
+
+        for (JSONObject player : getDynmapPlayerObjects()) {
+            if (name.equals(player.getString("name"))) {
+                coordinatePoints[0] = player.getFloat("x");
+                coordinatePoints[1] = player.getFloat("y");
+                coordinatePoints[2] = player.getFloat("z");
+            }
+        }
+
+        return coordinatePoints;
+    }
+
     public List<JSONObject> getDynmapPlayerObjects() throws IOException {
         Scanner sc = new Scanner(url.openStream());
         StringBuffer sb = new StringBuffer();
@@ -205,8 +219,8 @@ public class DynmapParser {
         String descriptionBox = nation.getString("desc");
 
         String unparsedMembers = descriptionBox.substring(descriptionBox.lastIndexOf("Members"))
-                .replace("Members <span style=\"font-weight:bold\">", "")
-                .replace("</span></div></div>", "");
+                .replace("Members <span style=\"font-weight:bold\">", ",")
+                .replace("</span></div></div>", ",");
 
         List<String> parsedMembers = new ArrayList<>(List.of(unparsedMembers.split(",")));
 
@@ -256,7 +270,7 @@ public class DynmapParser {
 
         for (String player : players) {
             if (!newPlayers.contains(player)) {
-                Main.getDiscordBot().checkLogOut(getPlayerByName(player));
+               // Main.getDiscordBot().checkLogOut(getPlayerByName(player));
             }
         }
 
