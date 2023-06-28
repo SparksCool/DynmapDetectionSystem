@@ -114,6 +114,7 @@ public class DiscordBot extends ListenerAdapter {
         JSONObject nationData;
         java.util.List<String> onlineMembers = new ArrayList<>();
         java.util.List<String> onlineAlliedMembers = new ArrayList<>();
+        java.util.List<String> onlineThreatMembers = new ArrayList<>();
 
 
         for (String nationName : Config.getConfigStringList("nationsList")) {
@@ -125,6 +126,13 @@ public class DiscordBot extends ListenerAdapter {
         }
 
         for (String nationName : Config.getConfigStringList("alliesList")) {
+            try {
+                onlineAlliedMembers.addAll(dynmapParser.getAllNationPlayers(nationName));
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        for (String nationName : Config.getConfigStringList("threatNations")) {
             try {
                 onlineAlliedMembers.addAll(dynmapParser.getAllNationPlayers(nationName));
             } catch (IOException e) {
@@ -154,7 +162,7 @@ public class DiscordBot extends ListenerAdapter {
                     else if (memberReportTimes == null || (memberReportTimes.get(player) != null && (((System.currentTimeMillis() - memberReportTimes.get(player)) / 1000 / 60 != 15)))) {
                         Logger.log(ConsoleColors.GREEN + player + ConsoleColors.BLUE + " must wait " + (15 - ((System.currentTimeMillis() - memberReportTimes.get(player)) / 1000 / 60) + " more minutes to be logged again!" ));
                     }
-                    else if (knownThreats.toString().contains(player)) {
+                    else if (knownThreats.toString().contains(player) || onlineThreatMembers.toString().contains(player)) {
                         threatsInLands.add(player);
                         memberReportTimes.put(player, System.currentTimeMillis());
                     }
